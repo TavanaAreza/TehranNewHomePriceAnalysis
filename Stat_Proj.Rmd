@@ -1,0 +1,676 @@
+---
+title: "Statistics and Applications Project"
+author: "Ahmadreza Tavana"
+date: "1/29/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Libraries
+In this section, at first we include libraries that we need in our project.
+
+##### IMPORTANT NOTE: IF YOU NEED TO INSTALL PACKAGE OF ANY OF BELOW LIBRARIES, PLEASE INSTALL IT. THANKS
+
+```{r Libraries}
+library(ggplot2)
+library(fastR2)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(stringr)
+library(MASS)
+library(readxl)
+library(writexl)
+```
+
+
+# Question 1
+
+## 1.a
+
+### 1.a.i
+In this part I decide to plot Gamma distribution with rate 2
+
+```{r 1.a.i}
+##### Question 1 part a.i
+# Gamma Distribution Plot With Rate = 2
+
+ggplot(data.frame(x = c(0 , 4)), aes(x = x)) + 
+  xlim(c(0 , 4)) + 
+  stat_function(fun = dgamma, args = list(rate = 2, shape = 2)) + 
+  labs(x = "\n x", y = "f(x) \n", 
+       title = "Gamma Distribution With Rate of 2 \n") + 
+  theme(plot.title = element_text(hjust = 0.5), 
+        axis.title.x = element_text(face="bold", size = 12),
+        axis.title.y = element_text(face="bold", size = 12))
+
+```
+
+### 1.a.ii
+In this part we have to pick up 10,100 and 1000 sample with 50 member from our Gamma distribution.
+
+```{r 1.a.ii}
+#### picking up 10 sample of 50 member from our gamma distribution
+
+x_sample_10 <- matrix(1,nrow = 50, ncol = 10)
+
+for(i in 1:10){
+  x_sample_10[1:50,i] <- rgamma(50,0.5)  ### we have to put 0.5 as second input of rgamma for rate of 2
+}
+
+x_sample_10_mean <- c(1:10)
+for (i in 1:10){
+  x_sample_10_mean[i] = mean(x_sample_10[1:50,i])
+}
+hist(x_sample_10_mean)
+
+
+
+
+
+#### picking up 100 sample of 50 member from our gamma distribution
+
+x_sample_100 <- matrix(1,nrow = 50, ncol = 100)
+
+for(i in 1:100){
+  x_sample_100[1:50,i] <- rgamma(50,0.5)
+}
+
+x_sample_100_mean <- c(1:100)
+for (i in 1:100){
+  x_sample_100_mean[i] = mean(x_sample_100[1:50,i])
+}
+hist(x_sample_100_mean)
+
+
+
+
+
+#### picking up 1000 sample of 50 member from our gamma distribution
+
+x_sample_1000 <- matrix(1,nrow = 50, ncol = 1000)
+
+for(i in 1:1000){
+  x_sample_1000[1:50,i] <- rgamma(50,0.5)
+}
+
+x_sample_1000_mean <- c(1:1000)
+for (i in 1:1000){
+  x_sample_1000_mean[i] = mean(x_sample_1000[1:50,i])
+}
+hist(x_sample_1000_mean)
+
+
+
+```
+
+
+### 1.a.iii
+In this part we have to check CLT theorem in our data.
+
+```{r 1.a.iii}
+### Z value for 10 sample 
+
+mean_of_10_sample = mean(x_sample_10_mean)
+var_of_10_sample = var(x_sample_10_mean)
+
+Z_10 = (x_sample_10_mean - mean_of_10_sample) / (sqrt(var_of_10_sample))
+
+his_10 = hist(Z_10)
+
+# overlay normal distribution to our histogram
+xfit<-seq(min(Z_10),max(Z_10),length = 100) 
+yfit<-dnorm(xfit,mean=mean(Z_10),sd=sd(Z_10)) 
+yfit <- yfit*diff(his_10$mids[1:2])*length(Z_10) 
+
+lines(xfit, yfit, col="red", lwd=2)
+
+
+
+### Z value for 100 sample 
+
+mean_of_100_sample = mean(x_sample_100_mean)
+var_of_100_sample = var(x_sample_100_mean)
+
+Z_100 = (x_sample_100_mean - mean_of_10_sample) / (sqrt(var_of_100_sample))
+
+his_100 = hist(Z_100)
+
+# overlay normal distribution to our histogram
+xfit<-seq(min(Z_100),max(Z_100),length = 100) 
+yfit<-dnorm(xfit,mean=mean(Z_100),sd=sd(Z_100)) 
+yfit <- yfit*diff(his_100$mids[1:2])*length(Z_100) 
+
+lines(xfit, yfit, col="red", lwd=2)
+
+
+
+### Z value for 1000 sample 
+
+mean_of_1000_sample = mean(x_sample_1000_mean)
+var_of_1000_sample = var(x_sample_1000_mean)
+
+Z_1000 = (x_sample_1000_mean - mean_of_1000_sample) / (sqrt(var_of_1000_sample))
+
+his_1000 = hist(Z_1000)
+
+# overlay normal distribution to our histogram
+xfit<-seq(min(Z_1000),max(Z_1000),length = 100) 
+yfit<-dnorm(xfit,mean=mean(Z_1000),sd=sd(Z_1000)) 
+yfit <- yfit*diff(his_1000$mids[1:2])*length(Z_1000) 
+
+lines(xfit, yfit, col="red", lwd=2)
+
+```
+
+
+As we can see, as the size of our sample increases, the histogram of our sample tends to standard normal distribution.
+
+
+## 1.b
+In this part we work with "Birth" data from "fastR2" library
+
+### 1.b.i
+
+```{r 1.b.i}
+
+#### loading data 
+data("Births")
+## Figuring out the day that has the minimum mean of birth in 20 years
+
+days_mean = c(1:366)
+
+for (i in 1:366){
+  days_mean[i] = mean(Births$births[Births$day_of_year == i])
+}
+cat("The minumum mean of birth of a day in all these 20 years is:\n",min(days_mean))
+
+
+for (i in 1:366){
+  if(days_mean[i] == min(days_mean)){
+    min_day_birth = i
+  }
+}
+cat("The day that has the minimum mean of of birth in all these 20 years is:\n",min_day_birth,"th day of year")
+
+
+
+## Figuring out the day that has the minimum mean of birth in 20 years
+
+cat("The maximum mean of birth of a day in all these 20 years is: \n",max(days_mean))
+
+for (i in 1:366){
+  if(days_mean[i] == max(days_mean)){
+    max_day_birth = i
+  }
+}
+cat("The day that has the maximum mean of of birth in all these 20 years is:\n",max_day_birth,"th day of year")
+
+```
+
+
+### 1.b.ii
+
+```{r 1.b.ii}
+### sorting month base on their mean of birth in 20 years
+
+months_mean = c(1:12)
+
+for (i in 1:12){
+  months_mean[i] = sum(Births$births[Births$month == i])/20
+}
+
+
+df_month_mean = data.frame(month_name = c("Jan","Feb","Mar","Apr","May","Jun","July","Aug","Sep","Oct","Nov","Dec"),months_mean)
+
+### Data frame of births mean of months
+df_month_mean
+
+### Data frame of births mean of months sortet by max to min
+df_month_mean[order(df_month_mean$months_mean,decreasing = 1),]
+
+```
+
+
+### 1.b.iii
+
+```{r 1.b.iii}
+
+years_mean = c(1:20)
+
+for (i in 1:20){
+  years_mean[i] = sum(Births$births[Births$year == i+1968])/365
+}
+
+barplot(years_mean,main = "Mean of births of Year",xlab = "Years", ylab = "Mean of births",names.arg = c(1969:1988))
+
+```
+
+
+
+## 1.c
+
+```{r 1.c}
+#### Sorting data base on date of happening
+storms_report = storms[order(storms$year,storms$month,storms$day,storms$hour),]
+storms_report
+#### Saving storms_report data frame as a csv file 
+write.csv(storms_report, file = "storms_report.csv")
+
+#### Plotting storms coordinates
+lat = storms$lat
+long = storms$long
+status = storms$status
+
+ggplot(data = storms) + geom_point(mapping = aes(x = lat,y = long, color = status))
+
+
+```
+
+
+
+
+# Question 2
+
+## 2.a
+
+### 2.a.i
+
+```{r 2.a.i}
+#### At first we load had.txt file and then seprate the last part from the other parts
+hadFile <- read.delim("had.txt",header = FALSE)
+colnames(hadFile) <- c("Age", "Sex", "ChestPain", "BP", "Cholesterol", "BS", "Lable")
+
+lable = data.frame(Lable = hadFile[,c(7)],lable_num = c(1:303)) 
+## we added features_num to manage row numbers to organize data for the next part
+
+features = data.frame(hadFile[,c(1:6)],features_num = c(1:303)) 
+## we added lable_num to manage row numbers to organize data for next part
+
+```
+
+### 2.a.ii
+
+```{r 2.a.ii}
+
+sample_train = sample(nrow(features), size=240)
+features_train = features[sample_train, ]
+lable_train = lable[sample_train, ]
+
+features_test = features[-features_train$features_num,]
+lable_test = lable[-lable_train$lable_num,]
+
+#### Saving data frames as txt file
+
+write.table(features_train,"features_train.txt",sep="\t")
+write.table(lable_train,"lable_train.txt",sep="\t")
+write.table(features_test,"features_test.txt",sep="\t")
+write.table(lable_test,"lable_test.txt",sep="\t")
+
+```
+
+
+## 2.b
+
+### 2.b.i
+
+```{r 2.b.i}
+
+Lable = lable_train$Lable
+Age = features_train$Age
+Sex = features_train$Sex
+ChestPain = features_train$ChestPain
+BP = features_train$BP
+Cholesterol = features_train$Cholesterol
+BS = features_train$BS
+
+features_train$ChestPain = as.factor(features_train$ChestPain)
+
+
+train_regression = lm(Lable ~ Age + Sex + ChestPain + BP + Cholesterol + BS)
+
+summary(train_regression)
+
+```
+
+summary function show Residuals min, 1Q, Median, 3Q, Max that shows the bar chart of our regression.
+For coefficients that we obtain from our regression, we have a estimation of coefficients and standard error of them and then it has a T test that calculates the t value for that and then calculate the probability of that t value.
+After coefficients parameters it calculates Residual standard error with degree of freedom of that dataset. Then it calculates R-squared value and do F test and calculate the F-value with degree of freedom of data set. At the end it calculates the p-value of estimated regression for figuring out the validation of our regression.
+
+
+### 2.b.ii
+
+In my regression, the magnitude of chest pain coefficients is greater that others.(with this assumption that the sign doesn't matter and interception coefficient and skip interception coefficient.) it means that if a person has chest pain the probability that the person have heart attack will be more and lowest magnitude of coefficient is coefficient of cholesterol that means that this coefficient has the least effect on heart attack of a person .But this comparison is not completely true because at first we got sample from our data and in our sampling we may collect some data that effect of some specific parameter become fewer, so we can not exactly say that which parameter has the most effect. The other reason that we can not exactly compare the coefficients is that the coefficients themselves have effect on each other and maybe effect of a parameter appears in the other parameter. For example effect of age appears in level of blood sugar or effect of high cholesterol appears in chest pain or some thing like that.
+
+One way to make parameter more comparable is that we normalize coefficients in the way that coefficients be near each other. For example for sex, we have 0 or 1 so for age we can separate ages and assign numbers from 0 to 3 to them, for example 0 for 0 to 25, 1 for 25 to 50 and 2 for 50 to 75 and 3 for 75 to 100 and so on. And we can do this for other parameters that have bigger value than others so we can regress them with same scale and decrease the error of our conclusion.
+
+
+
+## 2.c
+
+### 2.c.i
+
+```{r 2.c.i}
+
+##### testing regression to feature test and checking the amount with limit = 0
+
+features_check = c(1:63)
+
+### calculating the amount of regression to compare the sign with lim = 0
+for (i in 1:63){
+  features_check[i] = train_regression$coefficients[1] + sum(matrix(train_regression$coefficients[2:7]) * as.numeric(matrix(features_test[i,1:6])))
+}
+
+final_checking_features = ifelse(features_check>=0,1,-1) ## comparing with lim = 0
+
+lable_test_T_F = lable_test$Lable == 1
+final_checking_features_T_F = final_checking_features == 1
+
+### comparing test features and checking features by regression with lim = 0
+
+final_T_F = lable_test_T_F == final_checking_features_T_F
+
+sum_of_T = sum(final_T_F, na.rm = TRUE)
+
+accuracy_lable = sum(final_T_F, na.rm = TRUE)/63
+
+accuracy_lable
+
+```
+
+### 2.c.ii
+
+```{r 2.c.ii}
+
+lim_size = seq(-2,2,length = 10000)
+
+accuracy_lim_lable = c(1:10000)
+
+for(i in 1:10000){
+  final_checking_features = ifelse(features_check>=lim_size[i],1,-1)
+
+  lable_test_T_F = lable_test$Lable == 1
+  final_checking_features_T_F = final_checking_features == 1
+  
+  
+  final_T_F = lable_test_T_F == final_checking_features_T_F
+  
+  sum_of_T = sum(final_T_F, na.rm = TRUE)
+  
+  accuracy_lim_lable[i] = sum(final_T_F, na.rm = TRUE)/63
+  
+}
+
+### finding the best lim that gives us the best accuracy
+max_lim = max(accuracy_lim_lable)
+best_lim = match(max_lim,accuracy_lim_lable)
+### maximum accuracy that we can have
+max_lim
+
+### best amount of lim for having the best accuracy
+lim_size[best_lim] 
+
+### plotting accuracy by lim 
+plot(lim_size,accuracy_lim_lable,type = "l")
+
+
+
+```
+
+
+
+
+# Question 3
+
+## 3.a
+
+### 3.a.i
+
+
+```{r 3.a.i}
+Tehran_home_prices = read.csv("Question_3_Data.csv", encoding = "UTF-8")
+
+colnames(Tehran_home_prices) <- c("Region", "99.sp", c("98.w","98.f","98.su","98.sp"), c("97.w","97.f","97.su","97.sp"), c("96.w","96.f","96.su","96.sp"), c("95.w","95.f","95.su","95.sp"), c("94.w","94.f","94.su","94.sp"), c("93.w","93.f","93.su","93.sp"),c("92.w","92.f","92.su","92.sp"),c("91.w","91.f","91.su","91.sp"),c("90.w","90.f","90.su","90.sp"),c("89.w","89.f","89.su","89.sp"),c("88.w","88.f","88.su","88.sp")) ### set up new names for headers of our dataset.
+
+
+### changing bad data to NA
+t_price = Tehran_home_prices[3:25,2:46]
+
+defaultW <- getOption("warn")
+options(warn = -1)
+
+for (i in 1:45) {
+  t_price[,i] = as.numeric(t_price[,i])
+}
+
+options(warn = defaultW) ### this is for not printing warning comment
+
+t_price[t_price == 0] <- NA  ### replace zero values with NA
+
+NA_num_of_data = sapply(t_price, function(x) sum(is.na(x)))
+
+NA_num_of_data
+
+```
+
+### 3.a.ii
+
+In this part, I remove columns that have more than 7 NA data and for other columns, I rather not to replace NA data with something else, because replacing NA data with anything makes an error that can cause wrong conclusions. so I don't replace NA data with anything else and imagine that we didn't have these data at first, so in our regression we would not have error too much and cause to be more accurate.(I talk about this method to TA and he was OK with that.)
+
+```{r 3.a.ii}
+
+### removing columns with NA data more than 7
+
+for(i in 1:7){
+  for (i in 1:45) {
+    if(NA_num_of_data[i] > 7){
+       t_price = t_price[-i]
+    }
+  }
+}
+
+
+```
+
+### 3.a.iii
+
+
+```{r 3.a.iii}
+### saving new data set as an excel file
+
+Tehran_new_home_price = Tehran_home_prices[1:40]
+
+Tehran_new_home_price[3:25,2:40] = t_price
+
+### write_xlsx(Tehran_new_home_price, "C:\\Users\\RAYAN SERVICE\\Dropbox\\My PC (GetCH)\\Desktop\\Stat_Project\\Tehran_new_home_price.xlsx") #### I commented this part because I already put the written file in the file of my project and if I didn't make that line as a comment it could cause an error in your computer :)) !! But as I said I put the excel file in my project file.
+
+```
+
+## 3.b
+
+### 3.b.i
+
+At first we calculate K. My student number is 98104852 and rest of my student number in divided by 22 is 10. so K+1 is equal to 11. So I have to do regression for 11th region home price of Tehran. Actually because in our time line we both have month and year, I set this relation that year has coefficient of 4 and fall is 0, winter is 1, spring is 2 and summer is 3 and the relation is (4*year+season) and our beginning is fall of 88. So fall of 88 is 1 and for example winter of 90 is equal to 10. So with this relation for time we do regression for region 11.
+
+```{r 3.b.i}
+### our time line is from 1 to 39
+time_line = c(0:38)
+
+region_11_price = c(1:39)
+
+for (i in 1:39) {
+  region_11_price[i] = t_price[12,][1,40-i]
+}
+
+price_regression = lm(region_11_price ~ time_line)
+
+summary(price_regression)
+
+plot(time_line,region_11_price)
+
+lines(coef(price_regression)[1] + coef(price_regression)[2]*time_line, col = "red")
+
+cat("Result regression line is price_of_region_11 =" ,coef(price_regression)[1],"+", coef(price_regression)[2],"* time_line")
+
+```
+
+### 3.b.ii
+In this part at first I make a new data frame that contains time, region and price and on that data frame I put price of an specific time 
+
+```{r 3.b.ii}
+
+#####At first we create a new data frame for our regression by time and region for price
+
+time_regress = rep(c(0:38),each=22)
+
+region_regress = rep(c(1:22),times = 39)
+
+price_regress = c(1:858)
+
+for (i in 1:39) {
+  for (j in 2:23) {
+    price_regress[(i-1)*22+j-1] = t_price[j,40-i]
+    
+  }
+}
+
+reg_df = data.frame(region_regress,time_regress,price_regress)
+
+total_price_regression = lm(reg_df$price_regress ~ reg_df$time_regress + reg_df$region_regress)
+
+summary(total_price_regression)
+
+cat("Result regression plate is price =" ,coef(total_price_regression)[1],"+", coef(total_price_regression)[2],"* time", "+", coef(total_price_regression)[3], "* region")
+
+
+```
+
+### 3.b.iii
+In this part we have to define dummy (indicator) variable for each region and then do the regression for them.
+
+```{r 3.b.iii}
+### creating dummy variables data frame for each region (we don't define any dummy variable for region 11(K+1) and for region 11, all dummy variables of other regions are zero.)
+dummy_variables_region = data.frame(dm_region_1 = ifelse(reg_df$region_regress == 1,1,0),
+dm_region_2 = ifelse(reg_df$region_regress == 2,1,0),
+dm_region_3 = ifelse(reg_df$region_regress == 3,1,0),
+dm_region_4 = ifelse(reg_df$region_regress == 4,1,0),
+dm_region_5 = ifelse(reg_df$region_regress == 5,1,0),
+dm_region_6 = ifelse(reg_df$region_regress == 6,1,0),
+dm_region_7 = ifelse(reg_df$region_regress == 7,1,0),
+dm_region_8 = ifelse(reg_df$region_regress == 8,1,0),
+dm_region_9 = ifelse(reg_df$region_regress == 9,1,0),
+dm_region_10 = ifelse(reg_df$region_regress == 10,1,0),
+dm_region_12 = ifelse(reg_df$region_regress == 12,1,0),
+dm_region_13 = ifelse(reg_df$region_regress == 13,1,0),
+dm_region_14 = ifelse(reg_df$region_regress == 14,1,0),
+dm_region_15 = ifelse(reg_df$region_regress == 15,1,0),
+dm_region_16 = ifelse(reg_df$region_regress == 16,1,0),
+dm_region_17 = ifelse(reg_df$region_regress == 17,1,0),
+dm_region_18 = ifelse(reg_df$region_regress == 18,1,0),
+dm_region_19 = ifelse(reg_df$region_regress == 19,1,0),
+dm_region_20 = ifelse(reg_df$region_regress == 20,1,0),
+dm_region_21 = ifelse(reg_df$region_regress == 21,1,0),
+dm_region_22 = ifelse(reg_df$region_regress == 22,1,0))
+
+reg_df_dummy = data.frame(reg_df,dummy_variables_region)
+
+regression_dummy_var = lm(reg_df_dummy$price_regress ~ 
+                          +reg_df_dummy$time_regress
+                          +reg_df_dummy$dm_region_1
+                          +reg_df_dummy$dm_region_2
+                          +reg_df_dummy$dm_region_3
+                          +reg_df_dummy$dm_region_4
+                          +reg_df_dummy$dm_region_5
+                          +reg_df_dummy$dm_region_6
+                          +reg_df_dummy$dm_region_7
+                          +reg_df_dummy$dm_region_8
+                          +reg_df_dummy$dm_region_9
+                          +reg_df_dummy$dm_region_10
+                          +reg_df_dummy$dm_region_12
+                          +reg_df_dummy$dm_region_13
+                          +reg_df_dummy$dm_region_14
+                          +reg_df_dummy$dm_region_15
+                          +reg_df_dummy$dm_region_16
+                          +reg_df_dummy$dm_region_17
+                          +reg_df_dummy$dm_region_18
+                          +reg_df_dummy$dm_region_19
+                          +reg_df_dummy$dm_region_20
+                          +reg_df_dummy$dm_region_21
+                          +reg_df_dummy$dm_region_22)
+
+
+summary(regression_dummy_var)
+
+
+```
+
+### 3.b.iv
+As we can see the result of the first method is just a plate that explains all the regression in 3 factors, but the second method has 24 factors that explains our regression more specifically and with details on each region in the way that we can investigate in each region specifically. Actually for region K+1 we don't have a dummy variable and for checking that region we must put all the coefficient of other regions equal to zero and then we basically have a simple line for that area. Actually for other regions happens this fact as the same but in general the second method that we define some dummy(indicator) variables, our regression is more specific and we can check and investigate each region more specifically with more detail.
+
+
+
+## 3.c
+
+### 3.c.i
+
+At first we calculate K. My student number is 98104852 and rest of my student number in divided by 22 is 10. so K+1 is equal to 11. As we assume that winter of 90 is zero so summer of 93 is 10th season and fall of 93 is K+1th season. In this part null hypothesis is that the price of home doesn't change in passing a season and we have to accept or reject this hypothesis in this part. so h0 is that : mean_yi - mean_xi = 0.
+
+```{r 3.c.i}
+
+x_i = t_price$`93.su`[2:23]
+y_i = t_price$`93.f`[2:23]
+
+mean_xi = mean(x_i)
+
+mean_yi = mean(y_i)
+
+mean_diff = mean_xi - mean_yi
+cat("mean diffrence of mean of x_i and mean of y_i is equal to",mean_diff)
+
+sp2 = ((length(x_i)* sd(x_i)^2) + (length(y_i)* sd(y_i)^2))/(length(x_i)+length(y_i)-2)
+cat("Variance of the mean diffrence is equal to", sp2)
+
+stat = (mean_xi - mean_yi)/ sqrt(sp2/length(x_i) + sp2/length(y_i))
+cat("t value of our test is euqal to", stat)
+
+test_1 = t.test(x_i,y_i,paired = FALSE)
+test_1
+
+cat("p-value of this t.test is equal to:",test_1$p.value)
+
+```
+
+As we can see the p-value of our test is larger than typical values (for example 0.025), so with a high confidence we can accept the null hypothesis and we can say that the price of fall of 93 doesn't change in winter of 93.
+
+
+
+### 3.c.ii
+
+```{r 3.c.ii}
+
+z_i = x_i - y_i
+
+mean_zi = mean(z_i)
+cat("mean of z_i is equal to",mean_zi)
+
+var_zi = var(z_i)
+cat("variance of z_i is equal to",var_zi)
+
+stat_2 = mean_zi/sqrt(var_zi/length(z_i))
+cat("t-value of our test is equal to",stat_2)
+
+test_2 = t.test(x_i,y_i, paired = TRUE)
+test_2
+
+cat("p-value of our test is equal to:",test_2$p.value)
+
+
+```
+
+### 3.c.iii
+
+As we can see the p-value of this test is much smaller than the last one and because of that, if we want to reject the null hypothesis the second one is a better method for testing and if we want to accept the null hypothesis the first one is a better test and as I said the p-value of the second test is smaller than the first p-value so with more confidence we can accept this fact that the mean of price of next season is equal to the previous one. 
+
