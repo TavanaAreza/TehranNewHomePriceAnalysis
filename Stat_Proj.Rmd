@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Libraries
 In this section, at first we include libraries that we need in our project.
 
-##### IMPORTANT NOTE: IF YOU NEED TO INSTALL PACKAGE OF ANY OF BELOW LIBRARIES, PLEASE INSTALL IT. THANKS
+##### IMPORTANT NOTE: IF YOU NEED TO INSTALL PACKAGE OF ANY OF BELOW LIBRARIES, PLEASE INSTALL IT. THANKS!
 
 ```{r Libraries}
 library(ggplot2)
